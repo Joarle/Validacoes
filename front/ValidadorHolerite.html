@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="br-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="ValidadorTitle">Validador de Holerite</title>
+    <link rel="stylesheet" type="text/css" href="/visual.css">
+</head>
+<body>
+    <div class="header">
+
+        <div class="titulo">
+
+        </div>
+        <a href="/">
+            <div class="abas" id="GeradorAfd">
+                <p id="textGerador">Gerador de AFD</p>
+            </div>  
+        </a>
+            <a href="ValidadorHolerite">
+            <div class="abas" id="ValidadorHolerite" onclick="abaHolerite()">
+                <p>Valida Holerite</p>
+            </div>
+        </a>
+            <a href="GeradorHolerite">
+            <div class="abas" id="GeradorHolerite">
+                <p>Gerador Holerite</p>
+            </div>
+        </a>
+    </div>
+</br>
+</br>
+</br>
+
+    
+    <div class="body"><br>
+        <div class="head">
+            <h1>Validador de Holerite </h1>
+            <img class="img" src="./img/logo-holerite.png"  alt="logoHolerite" width="32px" height="30px">  
+        </div>
+    </br>
+    
+       <div id="nav" class="nav">
+
+            <input type="file" value="teste" id="file-input">
+
+            </br>
+            </br>
+                <label>
+                    Chave Soap </br>
+                    <input class="holeriteinput" type="text" 
+                    placeholder="Insira a Chave Soap" id="chaveSoap" name="ChaveSoap">
+                </label>
+            </br>
+                <label class="labelinput">
+                    Matricula
+                    <input class="holeriteinput" type="text" id="colaborador" 
+                    placeholder="Insira a matricula(separado por virgula)" name="Colaborador">
+                </label>
+
+                <label class="labelinput"> <div id="resultTool">A <b>competencia</b> fica localizada no seguimento D entre as colunas 18 e 23 </div>
+                    Competencia <button id=toolTip class="toolTip">?</button> </br> 
+                    <input class="holeriteinput" id="competencia"  type="month"> 
+                </label>
+            </br>
+            <div class="teste">
+                <label id="labelSoap">
+                    <button id="soapKey" onclick="soapKey()">Validar</button>
+                </label>
+            </div>
+            
+        </div>
+
+        <div class="error">
+
+            <div id="result">
+                <p></p>
+            </div>
+
+        </div>
+    <pre id="file-contents"></pre>
+
+
+
+    
+
+
+<script>
+        
+    document.getElementById("toolTip").addEventListener("click",toolTip);
+
+        if(document.getElementById("title") != "Gerador de AFD Fictício"){
+            document.getElementById("ValidadorHolerite").getElementsByTagName("P")[0].style.color = "rgb(0, 131, 192)";
+            document.getElementById("ValidadorHolerite").style.borderBottomWidth = "3px";
+        }
+    async function soapKey() {
+        let info = {
+            chaveSoap: document.getElementById("chaveSoap").value, 
+            colaborador: document.getElementById("colaborador").value, 
+
+        }
+
+        const settings = {
+            method: 'POST',
+            body: JSON.stringify(info),
+            headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            
+            }
+      
+        }
+    const response = await fetch('/WS', settings);
+    const data = await response.json();
+    console.log(data)
+    if(data.length === 0){
+        document.getElementById("result").getElementsByTagName("P")[0].style.border = "solid 1px rgb(253, 91, 91)";
+        document.getElementById("result").getElementsByTagName("P")[0].style.padding = "5px";
+        document.getElementById("result").getElementsByTagName("P")[0].innerHTML += "A Matricula informada é inexistente"
+    }
+    teste(data);
+
+    }
+
+
+    function teste (data){
+        document.getElementById("result").getElementsByTagName("P")[0].innerHTML = "";
+        document.getElementById("file-contents").innerHTML = ""
+        let file = document.querySelector("#file-input").files[0];
+		let reader = new FileReader();
+		reader.addEventListener('load', function(e) {
+	    		let text = e.target.result;
+	    		document.querySelector("#file-contents").textContent = text;
+
+                let competencia = document.getElementById("competencia").value.split("-");
+                let [competenciaMesString, competenciaAnoString] = competencia
+                let competenciaReal =  competenciaAnoString + competenciaMesString;
+
+
+                var [,... dSplit] = text.split(`D   ${competenciaReal}`);
+
+                console.log(dSplit);
+                
+                console.log(competencia);
+                console.log(competenciaReal);
+                
+                for(let i = 0; i < data.length; i++){
+                    
+                    
+
+                    let userName = data[i].nome; 
+                    let userMatricula = data[i].matricula;
+                    let testedSplit = dSplit.find(line => line.includes(userMatricula))
+                    let userCpf = data[i].cpf.replaceAll(".", "").replaceAll("-", "");
+                    let userCnpj = data[i].cnpj;
+                    let resultHtml = document.getElementById("result");
+                    let fileContentElement = document.getElementById("file-contents");
+                    
+                    
+                    console.log(userMatricula);
+                    function findName(nameArray) {
+                        if(nameArray.length === 0) return -1;
+                        let namePositionIndex = fileContentElement.innerHTML.indexOf(nameArray.join(' '));
+                        if(namePositionIndex < 0){
+                            if(nameArray.length <= 3) return -1;
+                            nameArray.pop();
+
+                            return findName(nameArray);
+                        }
+                        return namePositionIndex;
+                    }
+                    let teste = fileContentElement.innerHTML.substring(17,18);
+                    let cnpjMatch = fileContentElement.innerHTML.substring(18,32) === userCnpj && 
+                    fileContentElement.innerHTML.substring(17,18) === '2';
+                    if(cnpjMatch){
+                }else{
+                    resultHtml.getElementsByTagName("P")[0].innerHTML += ('CNPJ invalido' + '</br>')
+                }
+                    let teste2 = fileContentElement.innerHTML.substring(17,32);
+                    let allText = fileContentElement.innerHTML.substring(32,300)
+                    allText.includes(teste2);
+                    if(allText.includes(teste2)){
+                    }else{
+                        resultHtml.getElementsByTagName("P")[0].innerHTML += 'O CNPJ deve constar duas vezes no cabeçalho do arquivo' + '</br>' + 
+                        'entre a posição 19 e 32';
+                    }
+
+                     const namePosition = findName(userName.split(' '))
+                    let cpfCol = fileContentElement.innerHTML.substring(namePosition+30, namePosition+49);
+                    console.log(namePosition);
+                    console.log(cpfCol);
+                   /* if(cpfCol.replaceAll(" ", "") === `${userCpf}`){
+                    }else{
+                    resultHtml.getElementsByTagName("P")[0].innerHTML += 'NOME ' + userName + ' invalido ou na posição errada' + '</br>' +
+                    'O nome deve constar entre a coluna 44 e 73' + '</br>' + 
+                    'CPF ' + userCpf + ' invalido ou na posição errada' + '</br>' +
+                    'CPF deve constar entre a coluna 74 e 93' + '</br>' 
+                }*/
+                    
+                    let seguimentoPosition1 = fileContentElement.innerHTML.indexOf(testedSplit);
+                    let matriculaCol = fileContentElement.innerHTML.substring(seguimentoPosition1+15, seguimentoPosition1+30);
+                    let MatriulaClearZero = parseInt(matriculaCol)
+                    console.log(matriculaCol);
+                    matchMatricula = matriculaCol.replaceAll(" ", "") === userMatricula;
+
+                    if(matchMatricula){
+                    }else if(parseInt(matriculaCol) == parseInt(matchMatricula) ){
+                        resultHtml.getElementsByTagName("P")[0].style.border = "solid 1px rgb(253, 91, 91)";
+                        resultHtml.getElementsByTagName("P")[0].style.padding = "5px";
+                        resultHtml.getElementsByTagName("P")[0].innerHTML += 'A competência deve constar entre a coluna 18 e 23 do seguimento D' + '</br>';
+                        resultHtml.getElementsByTagName("P")[0].innerHTML += 'Matricula ' + userMatricula + ' Não deve conter zeros adicionais a esquerda' + '</br>' 
+                        + 'A matricula deve constar entre a coluna 39 e 53' + '</br>';
+                    }else{
+                        resultHtml.getElementsByTagName("P")[0].style.border = "solid 1px rgb(253, 91, 91)";
+                        resultHtml.getElementsByTagName("P")[0].style.padding = "5px";
+                        resultHtml.getElementsByTagName("P")[0].innerHTML += 'A competência deve constar entre a coluna 18 e 23 do seguimento D' + '</br>';
+                        resultHtml.getElementsByTagName("P")[0].innerHTML += 'Matricula ' + userMatricula + ' invalida ou na posição errada' + '</br>' 
+                        + 'A matricula deve constar entre a coluna 39 e 53' + '</br>';
+                    }
+                    if(resultHtml.getElementsByTagName("P")[0].innerHTML == ''){
+                        resultHtml.getElementsByTagName("P")[0].style.border = "solid 1px rgb(45, 255, 56)";
+                        resultHtml.getElementsByTagName("P")[0].style.backgroundColor = "rgba(0, 236, 32, 0.478)";
+                        resultHtml.getElementsByTagName("P")[0].style.color = "rgb(0, 177, 9)";
+                        resultHtml.getElementsByTagName("P")[0].style.padding = "5px";
+                        resultHtml.getElementsByTagName("P")[0].innerHTML = "Sucesso! Não foi identificado nenhum erro no arquivo." + "</br>";
+                    }
+                }
+	    });
+		reader.readAsText(file);
+    }
+    
+    function toolTip() {
+        let tooltipButton = document.getElementById("toolTip");
+        let tooltipVisible = document.getElementById("resultTool");
+        
+        if(window.getComputedStyle(tooltipVisible).visibility == "hidden"){
+            tooltipVisible.style.visibility = "visible";
+
+        }else if(window.getComputedStyle(tooltipVisible).visibility == "visible"){
+            tooltipVisible.style.visibility = "hidden";
+
+        }
+    }
+</script>
+    </body>
+    </html>
